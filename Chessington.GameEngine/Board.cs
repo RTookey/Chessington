@@ -41,6 +41,11 @@ namespace Chessington.GameEngine
             throw new ArgumentException("The supplied piece is not on the board.", "piece");
         }
 
+        public bool CheckInRange(Square square)
+        {
+            return square.Row > -1 && square.Row < GameSettings.BoardSize && square.Col < GameSettings.BoardSize && square.Col > -1;
+        }
+
         public void MovePiece(Square from, Square to)
         {
             var movingPiece = board[from.Row, from.Col];
