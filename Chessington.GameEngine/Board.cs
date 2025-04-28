@@ -41,6 +41,25 @@ namespace Chessington.GameEngine
             throw new ArgumentException("The supplied piece is not on the board.", "piece");
         }
 
+        public List<Square> IsThisCheck()
+        {
+            List<Square> result = new List<Square>();
+            for (var row = 0; row < GameSettings.BoardSize; row++)
+            {
+                for (var col = 0; col < GameSettings.BoardSize; col++)
+                {
+                    var piece = board[row, col]; // king is causing this 
+                    if (!(piece is King) && piece != null && piece.Player != CurrentPlayer)
+                    {
+                        var moves = piece.GetAvailableMoves(this);
+                        result.AddRange(moves);
+                    }
+                }
+            }
+            return result;  
+        }
+        
+
         public bool CheckInRange(Square square)
         {
             return square.Row > -1 && square.Row < GameSettings.BoardSize && square.Col < GameSettings.BoardSize && square.Col > -1;
