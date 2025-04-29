@@ -11,6 +11,8 @@ namespace Chessington.GameEngine
         public Player CurrentPlayer { get; private set; }
         public IList<Piece> CapturedPieces { get; private set; } 
 
+        public string CheckMessage { get; private set; }
+        
         public Board()
             : this(Player.White) { }
 
@@ -40,31 +42,29 @@ namespace Chessington.GameEngine
 
             throw new ArgumentException("The supplied piece is not on the board.", "piece");
         }
-
-        public List<Square> IsThisCheck()
-        {
-            List<Square> result = new List<Square>();
-            for (var row = 0; row < GameSettings.BoardSize; row++)
-            {
-                for (var col = 0; col < GameSettings.BoardSize; col++)
-                {
-                    var piece = board[row, col]; // king is causing this 
-                    if (!(piece is King) && piece != null && piece.Player != CurrentPlayer)
-                    {
-                        var moves = piece.GetAvailableMoves(this);
-                        result.AddRange(moves);
-                    }
-                }
-            }
-            return result;  
-        }
         
-
+        
         public bool CheckInRange(Square square)
         {
             return square.Row > -1 && square.Row < GameSettings.BoardSize && square.Col < GameSettings.BoardSize && square.Col > -1;
         }
 
+        public bool IsCheck()
+        {
+            List<Square> routes = new List<Square>();
+            Square kingsPosition = new Square(); 
+            for (var row = 0; row < GameSettings.BoardSize; row++)
+            for (var col = 0; col < GameSettings.BoardSize; col++)
+                if (board[row, col] != null && board[row, col].Player != CurrentPlayer)
+                    routes.AddRange(board[row, col].GetCheckRoutes(this));
+                else if (board[row, col] != null && board[row, col].Player == CurrentPlayer && board[row, col] is King)
+                {
+                    kingsPosition = new Square(row, col);
+                }
+            return routes.Any(s => s.Row == kingsPosition.Row && s.Col == kingsPosition.Col); 
+        }
+        
+        
         public void MovePiece(Square from, Square to)
         {
             var movingPiece = board[from.Row, from.Col];
@@ -74,17 +74,30 @@ namespace Chessington.GameEngine
             {
                 throw new ArgumentException("The supplied piece does not belong to the current player.");
             }
-
-            //If the space we're moving to is occupied, we need to mark it as captured.
-            if (board[to.Row, to.Col] != null)
-            {
-                OnPieceCaptured(board[to.Row, to.Col]);
-            }
-
-            //Move the piece and set the 'from' square to be empty.
+            
+            // Move the piece and set the 'from' square to be empty.
+            Piece pieceCaptured = board[to.Row, to.Col];
             board[to.Row, to.Col] = board[from.Row, from.Col];
             board[from.Row, from.Col] = null;
 
+            if (IsCheck())
+            {
+                board[from.Row, from.Col] = board[to.Row, to.Col];
+                board[to.Row, to.Col] = pieceCaptured;
+                CheckMessage = "Illegal move: King is in check";
+                OnKingInCheck(CheckMessage);
+                return; 
+            } else
+            {
+                CheckMessage = "Make Your Move";
+                OnKingInCheck(CheckMessage);
+            }
+
+            if (pieceCaptured != null)
+            {
+                OnPieceCaptured(pieceCaptured);
+            }
+            
             CurrentPlayer = movingPiece.Player == Player.White ? Player.Black : Player.White;
             OnCurrentPlayerChanged(CurrentPlayer);
         }
@@ -103,6 +116,16 @@ namespace Chessington.GameEngine
 
         public event CurrentPlayerChangedEventHandler CurrentPlayerChanged;
 
+        public delegate void KingInCheckEventHandler(string message);
+        
+        public event KingInCheckEventHandler KingInCheck;
+
+        protected virtual void OnKingInCheck(string message)
+        {
+            var handler = KingInCheck;
+            if (handler != null) handler(message);
+        }
+        
         protected virtual void OnCurrentPlayerChanged(Player player)
         {
             var handler = CurrentPlayerChanged;

@@ -11,9 +11,11 @@ using Chessington.UI.Properties;
 
 namespace Chessington.UI.ViewModels
 {
-    public class GameViewModel : INotifyPropertyChanged, IHandle<PieceTaken>, IHandle<CurrentPlayerChanged>
+    public class GameViewModel : INotifyPropertyChanged, IHandle<PieceTaken>, IHandle<CurrentPlayerChanged>, IHandle<CheckMessage>
     {
         private string currentPlayer;
+
+        private string checkMessage; 
 
         public GameViewModel()
         {
@@ -35,6 +37,17 @@ namespace Chessington.UI.ViewModels
             }
         }
 
+        public string CheckMessage
+        {
+            get { return checkMessage; }
+            private set
+            {
+                if (value == checkMessage) return;
+                checkMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
         public void Handle(PieceTaken message)
         {
             CapturedPieces.Add(PieceImageFactory.GetImage(message.Piece));
@@ -43,6 +56,11 @@ namespace Chessington.UI.ViewModels
         public void Handle(CurrentPlayerChanged message)
         {
             CurrentPlayer = Enum.GetName(typeof(Player), message.Player);
+        }
+        
+        public void Handle(CheckMessage message)
+        {
+            CheckMessage = message.Message;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

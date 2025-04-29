@@ -8,6 +8,12 @@ namespace Chessington.GameEngine.Pieces
         public Knight(Player player)
             : base(player) { }
 
+        public override IEnumerable<Square> GetCheckRoutes(Board board)
+        {
+            return new List<Square>();
+        }
+
+        
         public IEnumerable<Square> GetAvailableMovesByDirection(Board board, Square currentSquare, (int, int) direction)
         {
             var availableMoves = new List<Square>();

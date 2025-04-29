@@ -18,6 +18,7 @@ namespace Chessington.UI.ViewModels
             Board = new Board();
             Board.PieceCaptured += BoardOnPieceCaptured;
             Board.CurrentPlayerChanged += BoardOnCurrentPlayerChanged;
+            Board.KingInCheck += BoardOnKingInCheck;
             ChessingtonServices.EventAggregator.Subscribe(this);
         }
         
@@ -65,6 +66,11 @@ namespace Chessington.UI.ViewModels
             }
         }
 
+        private void BoardOnKingInCheck(string message)
+        {
+            ChessingtonServices.EventAggregator.Publish(new CheckMessage(message));
+        }
+        
         private static void BoardOnPieceCaptured(Piece piece)
         {
             ChessingtonServices.EventAggregator.Publish(new PieceTaken(piece));

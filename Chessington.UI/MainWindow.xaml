@@ -8,6 +8,7 @@
             </StackPanel>
         </Border>
         <StackPanel Orientation="Vertical">
+            <TextBlock Text="{Binding CheckMessage}" FontWeight="Bold" FontSize="12"></TextBlock>
             <TextBlock Text="{Binding CurrentPlayer}" FontWeight="Bold" FontSize="14" />
         <ListView ItemsSource="{Binding CapturedPieces}">
             <ListView.ItemTemplate>
